@@ -1,0 +1,122 @@
+import random
+import time
+
+# Board configuration: list of points where the stones can be placed
+valid_points = [
+    'a1', 'a3', 'a5', 'b2', 'b4', 'b6', 'c1', 'c3', 'c5', 'd2', 'd4', 'd6',
+    'e1', 'e3', 'e5', 'f2', 'f4', 'f6', 'g1', 'g3', 'g5'
+]
+
+# Initialize the board (Empty board)
+board = {point: None for point in valid_points}
+
+# Player colors
+BLUE = "blue"
+ORANGE = "orange"
+
+# Game state tracking
+player_hand = {BLUE: 10, ORANGE: 10}  # 10 pieces for each player at the start
+
+# A function to check if a move creates a mill (three aligned stones of same color)
+def check_mill(board, player):
+    mills = [
+        ['a1', 'a3', 'a5'],
+        ['b2', 'd4', 'f6'],
+        ['c1', 'c3', 'c5'],
+        ['b4', 'd2', 'f4'],
+        ['e1', 'e3', 'e5'],
+        ['c1', 'd4', 'f6']
+    ]
+    
+    for mill in mills:
+        if all(board[point] == player for point in mill):
+            return True
+    return False
+
+# Evaluation function
+def evaluate_board(board, player):
+    score = 0
+    
+    # Count mills (positive for player, negative for opponent)
+    for mill in [['a1', 'a3', 'a5'], ['b2', 'd4', 'f6'], ['c1', 'c3', 'c5']]:
+        if all(board[point] == player for point in mill):
+            score += 10  # Each mill is worth +10
+        elif all(board[point] == (BLUE if player == ORANGE else ORANGE) for point in mill):
+            score -= 10  # Opponent's mill is worth -10
+
+    # Count pieces remaining
+    score += sum([1 for point in board.values() if point == player])
+    return score
+
+# Minimax with Alpha-Beta Pruning
+def minimax(board, depth, alpha, beta, maximizing_player, player):
+    if depth == 0 or check_mill(board, player) or all(val != None for val in board.values()):
+        return evaluate_board(board, player)
+    
+    valid_moves = [point for point, value in board.items() if value is None]
+    
+    if maximizing_player:
+        max_eval = float('-inf')
+        for move in valid_moves:
+            board[move] = player
+            eval = minimax(board, depth - 1, alpha, beta, False, player)
+            max_eval = max(max_eval, eval)
+            alpha = max(alpha, eval)
+            if beta <= alpha:
+                break
+            board[move] = None  # Undo the move
+        return max_eval
+    else:
+        min_eval = float('inf')
+        opponent = BLUE if player == ORANGE else ORANGE
+        for move in valid_moves:
+            board[move] = opponent
+            eval = minimax(board, depth - 1, alpha, beta, True, player)
+            min_eval = min(min_eval, eval)
+            beta = min(beta, eval)
+            if beta <= alpha:
+                break
+            board[move] = None  # Undo the move
+        return min_eval
+
+# Choose the best move using minimax
+def choose_move(board, player, depth=3):
+    best_move = None
+    best_value = float('-inf') if player == BLUE else float('inf')
+    
+    valid_moves = [point for point, value in board.items() if value is None]
+    
+    for move in valid_moves:
+        board[move] = player
+        move_value = minimax(board, depth - 1, float('-inf'), float('inf'), player == ORANGE, player)
+        if (player == BLUE and move_value > best_value) or (player == ORANGE and move_value < best_value):
+            best_value = move_value
+            best_move = move
+        board[move] = None  # Undo the move
+    
+    return best_move
+
+# Function to play the game and interact with the referee
+def play_game():
+    current_player = BLUE
+    while True:
+        # Wait for opponent's move
+        move = input().strip()
+        
+        # Parse move (e.g., 'h1 d1 r0')
+        move_parts = move.split()
+        
+        if move_parts[0] == current_player:
+            print(f"Player {current_player} makes move: {move_parts}")
+            if move_parts[2] != "r0":
+                print("Invalid move: Opponent made an illegal move")
+                break  # Handle invalid moves
+                
+            # Calculate best move for the current player
+            best_move = choose_move(board, current_player)
+            print(best_move)
+            # Send the best move to referee
+            current_player = BLUE if current_player == ORANGE else ORANGE  # Switch player
+
+if __name__ == "__main__":
+    play_game()
