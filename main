@@ -19,13 +19,23 @@ player_hand = {BLUE: 10, ORANGE: 10}  # 10 pieces for each player at the start
 
 # A function to check if a move creates a mill (three aligned stones of same color)
 def check_mill(board, player):
-    mills = [
-        ['a1', 'a3', 'a5'],
-        ['b2', 'd4', 'f6'],
-        ['c1', 'c3', 'c5'],
-        ['b4', 'd2', 'f4'],
-        ['e1', 'e3', 'e5'],
-        ['c1', 'd4', 'f6']
+   mills = [
+        ['a1', 'a4', 'a7'],
+        ['b2', 'b4', 'b6'],
+        ['c3', 'c4', 'c5'],
+        ['d1', 'd2','d3'],
+        ['d5','d6','d7'],
+        ['e3', 'e4', 'e5'],
+        ['f2', 'f4', 'f6'],
+        ['g1', 'g4', 'g7'],
+        ['a1', 'd1', 'g1'],
+        ['b2', 'c2', 'd2'],
+        ['c3', 'd3', 'e3'],
+        ['a4', 'b4', 'c4'],
+        ['e4', 'f4', 'g4'],
+        ['c5', 'd5', 'e5'],
+        ['b6', 'd6', 'f6'],
+        ['a7', 'd7', 'g7']
     ]
     
     for mill in mills:
