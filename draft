@@ -1,13 +1,13 @@
 import random
 import time
 
-# Board configuration: list of points where the stones can be placed
+# Custom board points
 valid_points = [
-    'a1', 'a3', 'a5', 'b2', 'b4', 'b6', 'c1', 'c3', 'c5', 'd2', 'd4', 'd6',
-    'e1', 'e3', 'e5', 'f2', 'f4', 'f6', 'g1', 'g3', 'g5'
+    'a1', 'a4', 'a7', 'b2', 'b4', 'b6', 'c3', 'c4', 'c5', 'd1', 'd2', 'd3',
+    'd5', 'd6', 'd7', 'e1', 'e3', 'e4', 'e5', 'f2', 'f4', 'f6', 'g1', 'g4', 'g7'
 ]
 
-# Initialize the board (Empty board)
+# Initialize the board (Empty board with no stones at the start)
 board = {point: None for point in valid_points}
 
 # Player colors
@@ -17,6 +17,34 @@ ORANGE = "orange"
 # Game state tracking
 player_hand = {BLUE: 10, ORANGE: 10}  # 10 pieces for each player at the start
 
+# Define the valid mills (only horizontal and vertical lines are considered valid)
+valid_mills = [
+    ['a1', 'a4', 'a7'],   # Vertical line 1
+    ['b2', 'b4', 'b6'],   # Vertical line 2
+    ['c3', 'c4', 'c5'],   # Vertical line 3
+    ['d1', 'd2', 'd3'],   # Horizontal line 1
+    ['d5', 'd6', 'd7'],   # Horizontal line 2
+    ['e3', 'e4', 'e5'],   # Horizontal line 3
+    ['f2', 'f4', 'f6'],   # Horizontal line 4
+    ['g1', 'g4', 'g7'],   # Vertical line 4
+    ['a1', 'd1', 'g1'],   # Vertical line connecting a1, d1, g1
+    ['b2', 'd2', 'f2'],   # Vertical line connecting b2, d2, f2
+    ['c3', 'd3', 'e3'],   # Vertical line connecting c3, d3, e3
+    ['a4', 'b4', 'c4'],   # Horizontal line connecting a4, b4, c4
+    ['e4', 'f4', 'g4'],   # Horizontal line connecting e4, f4, g4
+    ['c5', 'd5', 'e5'],   # Horizontal line connecting c5, d5, e5
+    ['b6', 'd6', 'f6'],   # Horizontal line connecting b6, d6, f6
+    ['a7', 'd7', 'g7']    # Vertical line connecting a7, d7, g7
+]
+
+# Function to check if a player has formed a mill
+def check_mill(board, player):
+    # Check each valid mill line
+    for mill in valid_mills:
+        if all(board[point] == player for point in mill):
+            return mill  # Return the positions of the formed mill
+    return None
+
 # Function to check if a player has only 2 stones left
 def has_two_stones_left(player):
     return player_hand[player] == 2
@@ -25,21 +53,46 @@ def has_two_stones_left(player):
 def has_three_stones_left(player):
     return player_hand[player] == 3
 
-# Function to check if a player has formed a mill
-def check_mill(board, player):
-    mills = [
-        ['a1', 'a3', 'a5'],
-        ['b2', 'd4', 'f6'],
-        ['c1', 'c3', 'c5'],
-        ['b4', 'd2', 'f4'],
-        ['e1', 'e3', 'e5'],
-        ['c1', 'd4', 'f6']
-    ]
-    
-    for mill in mills:
-        if all(board[point] == player for point in mill):
-            return mill  # Return the positions of the formed mill
-    return None
+# Function to check if the game has ended
+def check_game_end():
+    if has_two_stones_left(BLUE):
+        print("Player BLUE has only 2 stones left! Player ORANGE wins!")
+        return True
+    elif has_two_stones_left(ORANGE):
+        print("Player ORANGE has only 2 stones left! Player BLUE wins!")
+        return True
+    return False
+
+# Function to check if a move is adjacent (used for normal moves)
+def is_adjacent(source, destination):
+    adjacency = {
+        'a1': ['a4', 'b2'],
+        'a4': ['a1', 'a7', 'b4'],
+        'a7': ['a4', 'b6'],
+        'b2': ['a1', 'c3', 'd2'],
+        'b4': ['a7', 'c4', 'd5'],
+        'b6': ['a7', 'c5'],
+        'c3': ['b2', 'd3', 'e3'],
+        'c4': ['b4', 'd4', 'e4'],
+        'c5': ['b6', 'd5'],
+        'd1': ['d2', 'e1'],
+        'd2': ['d1', 'b2', 'e2'],
+        'd3': ['d2', 'd4', 'e3'],
+        'd5': ['d6', 'c5', 'e5'],
+        'd6': ['d5', 'c5', 'e6'],
+        'd7': ['d6', 'g7'],
+        'e1': ['d1', 'f2'],
+        'e3': ['c3', 'f3'],
+        'e4': ['d4', 'f4'],
+        'e5': ['c5', 'f5'],
+        'f2': ['f4', 'g1'],
+        'f4': ['f2', 'f6', 'g4'],
+        'f6': ['f4', 'g5'],
+        'g1': ['d1', 'g4'],
+        'g4': ['g1', 'd4', 'g7'],
+        'g7': ['g4', 'd7']
+    }
+    return destination in adjacency.get(source, [])
 
 # Function to remove an opponent's stone (Player Chooses)
 def remove_opponent_stone(board, player):
@@ -71,72 +124,27 @@ def remove_opponent_stone(board, player):
     else:
         print("No valid stones to remove.")
 
-# Function to check if the game has ended
-def check_game_end():
-    if has_two_stones_left(BLUE):
-        print("Player BLUE has only 2 stones left! Player ORANGE wins!")
-        return True
-    elif has_two_stones_left(ORANGE):
-        print("Player ORANGE has only 2 stones left! Player BLUE wins!")
-        return True
-    return False
-
-# Function to check if a move is adjacent (used for normal moves)
-def is_adjacent(source, destination):
-    adjacency = {
-        'a1': ['a3', 'b2'],
-        'a3': ['a1', 'a5', 'b2'],
-        'a5': ['a3', 'b4'],
-        'b2': ['a1', 'a3', 'd4'],
-        'b4': ['a5', 'd2', 'f6'],
-        'b6': ['c5', 'd4'],
-        'c1': ['c3', 'd2'],
-        'c3': ['a3', 'c1', 'e1'],
-        'c5': ['b4', 'e5'],
-        'd2': ['b2', 'c3', 'e3'],
-        'd4': ['b4', 'd2', 'f4'],
-        'd6': ['f4', 'f6'],
-        'e1': ['c3', 'e3'],
-        'e3': ['d2', 'e1', 'f2'],
-        'e5': ['c5', 'f6'],
-        'f2': ['e3', 'f4'],
-        'f4': ['d4', 'e5', 'f2'],
-        'f6': ['b6', 'e5', 'd6'],
-        'g1': ['g3'],
-        'g3': ['g1', 'g5'],
-        'g5': ['g3']
-    }
-    return destination in adjacency.get(source, [])
-
 # Function to make a move and check if the game ends
-def make_move(board, move, player):
-    source, destination, remove = move.split()
-    source = source.strip()
-    destination = destination.strip()
-    remove = remove.strip()
+def make_move(board, source, destination, player):
+    # Check if destination is empty
+    if board[destination] is not None:
+        print(f"Invalid move: {destination} is already occupied.")
+        return False
     
     # If the player has only 3 stones left, they can "fly" to any empty spot
     if has_three_stones_left(player):
         # No adjacency requirement for flying move
-        if board[destination] is None:  # The destination must be empty
-            board[destination] = player
-            print(f"Player {player} flew a stone to {destination}")
-        else:
-            print(f"Invalid move: {destination} is already occupied.")
-            return
+        board[destination] = player
+        print(f"Player {player} flew a stone to {destination}")
     else:
-        # Normal move with adjacency rule (if the stone is not from the hand)
-        if source == "h1" or source == "h2":  # If the stone is coming from the player's hand
+        # Normal move with adjacency rule
+        if is_adjacent(source, destination):
             board[destination] = player
+            board[source] = None  # Move the stone from the source to the destination
+            print(f"Player {player} moved: {source} -> {destination}")
         else:
-            # If moving a stone, ensure it's adjacent unless flying
-            if is_adjacent(source, destination):
-                board[destination] = player
-            else:
-                print(f"Invalid move: {destination} is not adjacent to {source}.")
-                return
-
-    print(f"Player {player} moved: {source} -> {destination}")
+            print(f"Invalid move: {destination} is not adjacent to {source}.")
+            return False
     
     # Check if a mill was formed and remove opponent's stone
     if check_mill(board, player):
@@ -146,6 +154,53 @@ def make_move(board, move, player):
     if check_game_end():
         return True
     return False
+
+# Minimax algorithm with alpha-beta pruning
+def minimax(board, depth, alpha, beta, maximizing_player, player):
+    if depth == 0 or has_two_stones_left(player) or has_two_stones_left(ORANGE if player == BLUE else BLUE):
+        return evaluate_board(board, player)
+    
+    valid_moves = [point for point, value in board.items() if value is None]
+
+    if maximizing_player:
+        max_eval = float('-inf')
+        for move in valid_moves:
+            board[move] = player
+            eval = minimax(board, depth - 1, alpha, beta, False, player)
+            max_eval = max(max_eval, eval)
+            alpha = max(alpha, eval)
+            if beta <= alpha:
+                break
+            board[move] = None  # Undo the move
+        return max_eval
+    else:
+        min_eval = float('inf')
+        opponent = BLUE if player == ORANGE else ORANGE
+        for move in valid_moves:
+            board[move] = opponent
+            eval = minimax(board, depth - 1, alpha, beta, True, player)
+            min_eval = min(min_eval, eval)
+            beta = min(beta, eval)
+            if beta <= alpha:
+                break
+            board[move] = None  # Undo the move
+        return min_eval
+
+# Evaluation function to score the board
+def evaluate_board(board, player):
+    score = 0
+    
+    # Check for mills
+    for mill in valid_mills:
+        if all(board[point] == player for point in mill):
+            score += 10  # Each mill gives a positive score
+        elif all(board[point] == (BLUE if player == ORANGE else ORANGE) for point in mill):
+            score -= 10  # Opponent's mill gives a negative score
+    
+    # Count the number of stones remaining for the player
+    score += sum([1 for point in board.values() if point == player])
+    
+    return score
 
 # Function to choose the best move using minimax
 def choose_move(board, player, depth=3):
