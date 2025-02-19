@@ -12,7 +12,7 @@ board = {point: None for point in valid_points}
 
 # Player colors
 BLUE = "blue"
-ORANGE = "orange"
+ORANGE = "orange" 
 
 # Game state tracking
 player_hand = {BLUE: 10, ORANGE: 10}  # 10 pieces for each player at the start
